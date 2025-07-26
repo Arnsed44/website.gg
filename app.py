@@ -22,7 +22,7 @@ DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1398769513968697505/nWEK
 def init_db():
     conn = sqlite3.connect('data_logs.db')
     cursor = conn.cursor()
-            cursor.execute('''
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS visitor_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
