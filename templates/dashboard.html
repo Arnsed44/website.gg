@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .data-table {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 10px 0 0;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .refresh-btn {
+            float: right;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Analytics Dashboard</h1>
+        <p>Real-time visitor data and analytics</p>
+    </div>
+    
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalVisitors">-</div>
+                <div class="stat-label">Total Visitors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="uniqueIPs">-</div>
+                <div class="stat-label">Unique IP Addresses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayVisits">-</div>
+                <div class="stat-label">Today's Visits</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgDaily">-</div>
+                <div class="stat-label">Avg Daily Visits</div>
+            </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">Browser Distribution</div>
+                <canvas id="browserChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">Operating Systems</div>
+                <canvas id="osChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-container" style="margin-bottom: 30px;">
+            <div class="chart-title">Daily Visits (Last 7 Days)</div>
+            <canvas id="dailyChart"></canvas>
+        </div>
+        
+        <!-- Data Table -->
+        <div class="data-table">
+            <div class="section-title">
+                Recent Visitor Logs
+                <button class="btn refresh-btn" onclick="refreshData()">Refresh</button>
+                <a href="/export" class="btn">Export Data</a>
+                <a href="/" class="btn">Back to Home</a>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>IP Address</th>
+                        <th>Browser</th>
+                        <th>OS</th>
+                        <th>Resolution</th>
+                        <th>Location</th>
+                        <th>Session ID</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTable">
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log[1] }}</td>
+                        <td>{{ log[2][:15] }}...</td>
+                        <td>{{ log[5] }}</td>
+                        <td>{{ log[6] }}</td>
+                        <td>{{ log[8] }}</td>
+                        <td>{{ log[14] }} {{ log[15] }}</td>
+                        <td>{{ log[12][:8] }}...</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let browserChart, osChart, dailyChart;
+
+        // Load data on page load
+        window.addEventListener('load', function() {
+            loadStatistics();
+        });
+
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                // Update statistics cards
+                document.getElementById('totalVisitors').textContent = data.total_visitors;
+                document.getElementById('uniqueIPs').textContent = data.unique_ips;
+                
+                // Calculate today's visits and average
+                const today = new Date().toISOString().split('T')[0];
+                const todayVisits = data.daily_visits.find(day => day[0] === today);
+                document.getElementById('todayVisits').textContent = todayVisits ? todayVisits[1] : 0;
+                
+                const avgDaily = data.daily_visits.length > 0 ? 
+                    Math.round(data.daily_visits.reduce((sum, day) => sum + day[1], 0) / data.daily_visits.length) : 0;
+                document.getElementById('avgDaily').textContent = avgDaily;
+                
+                // Create charts
+                createBrowserChart(data.browsers);
+                createOSChart(data.operating_systems);
+                createDailyChart(data.daily_visits);
+                
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        function createBrowserChart(browsers) {
+            const ctx = document.getElementById('browserChart').getContext('2d');
+            
+            if (browserChart) {
+                browserChart.destroy();
+            }
+            
+            browserChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: browsers.map(b => b[0] || 'Unknown'),
+                    datasets: [{
+                        data: browsers.map(b => b[1]),
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createOSChart(operatingSystems) {
+            const ctx = document.getElementById('osChart').getContext('2d');
+            
+            if (osChart) {
+                osChart.destroy();
+            }
+            
+            osChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: operatingSystems.map(os => os[0] || 'Unknown'),
+                    datasets: [{
+                        data: operatingSystems.map(os => os[1]),
+                        backgroundColor: [
+                            '#36A2EB',
+                            '#FF6384',
+                            '#4BC0C0',
+                            '#FFCE56',
+                            '#9966FF',
+                            '#FF9F40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDailyChart(dailyVisits) {
+            const ctx = document.getElementById('dailyChart').getContext('2d');
+            
+            if (dailyChart) {
+                dailyChart.destroy();
+            }
+            
+            dailyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dailyVisits.map(day => day[0]),
+                    datasets: [{
+                        label: 'Daily Visits',
+                        data: dailyVisits.map(day => day[1]),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function refreshData() {
+            location.reload();
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadStatistics, 30000);
+    </script>
+</body>
+</html>
