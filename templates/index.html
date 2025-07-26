@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analytics Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .data-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .data-info h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        
+        .data-item {
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Analytics Platform</h1>
+        <p>Welcome to our analytics platform. We collect anonymized data for research and analysis purposes.</p>
+        
+        <a href="/dashboard" class="btn">View Dashboard</a>
+        <button onclick="collectData()" class="btn">Test Data Collection</button>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="data-info">
+            <h3>Data Being Collected:</h3>
+            <div class="data-item">✓ IP Address (and hashed version)</div>
+            <div class="data-item">✓ Browser Information</div>
+            <div class="data-item">✓ Operating System</div>
+            <div class="data-item">✓ Screen Resolution</div>
+            <div class="data-item">✓ Timezone</div>
+            <div class="data-item">✓ Language Settings</div>
+            <div class="data-item">✓ Hardware Fingerprint</div>
+            <div class="data-item">✓ Session Information</div>
+        </div>
+    </div>
+
+    <script>
+        // Automatically collect data when page loads
+        window.addEventListener('load', function() {
+            setTimeout(collectData, 1000); // Delay to ensure all page elements are loaded
+        });
+
+        function collectData() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status';
+            statusDiv.innerHTML = 'Collecting data...';
+
+            // Gather comprehensive system and browser data
+            const data = {
+                // Browser information
+                browser: getBrowserInfo(),
+                user_agent: navigator.userAgent,
+                
+                // System information
+                os: getOperatingSystem(),
+                platform: navigator.platform,
+                
+                // Display information
+                screen_resolution: `${screen.width}x${screen.height}`,
+                color_depth: screen.colorDepth,
+                pixel_ratio: window.devicePixelRatio,
+                
+                // Locale and time
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                language: navigator.language,
+                languages: navigator.languages,
+                
+                // Browser capabilities
+                cookies_enabled: navigator.cookieEnabled,
+                do_not_track: navigator.doNotTrack,
+                java_enabled: navigator.javaEnabled ? navigator.javaEnabled() : false,
+                
+                // Hardware information
+                hardware_concurrency: navigator.hardwareConcurrency,
+                memory: navigator.deviceMemory,
+                
+                // Network information (if available)
+                connection: navigator.connection ? {
+                    effective_type: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink,
+                    rtt: navigator.connection.rtt
+                } : null,
+                
+                // Fingerprinting data
+                fingerprint: generateFingerprint(),
+                canvas_fingerprint: getCanvasFingerprint(),
+                webgl_fingerprint: getWebGLFingerprint(),
+                
+                // Page information
+                url: window.location.href,
+                referrer: document.referrer,
+                
+                // Additional metadata
+                timestamp: new Date().toISOString(),
+                viewport: `${window.innerWidth}x${window.innerHeight}`,
+                
+                // Performance data
+                performance: getPerformanceData()
+            };
+
+            // Send data to server
+            fetch('/collect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = `
+                        ✅ Data collected successfully!<br>
+                        Session ID: ${result.session_id}<br>
+                        Hardware ID: ${result.hwid}
+                    `;
+                } else {
+                    throw new Error(result.message || 'Unknown error');
+                }
+            })
+            .catch(error => {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+            });
+        }
+
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Chrome')) return 'Chrome';
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Safari')) return 'Safari';
+            if (ua.includes('Edge')) return 'Edge';
+            if (ua.includes('Opera')) return 'Opera';
+            return 'Unknown';
+        }
+
+        function getOperatingSystem() {
+            const platform = navigator.platform.toLowerCase();
+            const ua = navigator.userAgent.toLowerCase();
+            
+            if (platform.includes('win')) return 'Windows';
+            if (platform.includes('mac')) return 'macOS';
+            if (platform.includes('linux')) return 'Linux';
+            if (ua.includes('android')) return 'Android';
+            if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS';
+            return 'Unknown';
+        }
+
+        function generateFingerprint() {
+            const components = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width + 'x' + screen.height,
+                new Date().getTimezoneOffset(),
+                navigator.platform,
+                navigator.cookieEnabled,
+                navigator.doNotTrack
+            ];
+            
+            return btoa(components.join('|')).slice(0, 32);
+        }
+
+        function getCanvasFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.fillText('Canvas fingerprint text 🎨', 2, 2);
+                return canvas.toDataURL().slice(-32);
+            } catch (e) {
+                return 'unavailable';
+            }
+        }
+
+        function getWebGLFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (!gl) return 'unavailable';
+                
+                const vendor = gl.getParameter(gl.VENDOR);
+                const renderer = gl.getParameter(gl.RENDERER);
+                return btoa(vendor + '|' + renderer).slice(-32);
+            } catch (e) {
+                return 'unavailable';
+            }
+        }
+
+        function getPerformanceData() {
+            if (!window.performance) return null;
+            
+            return {
+                navigation_type: performance.navigation ? performance.navigation.type : null,
+                redirect_count: performance.navigation ? performance.navigation.redirectCount : null,
+                timing: performance.timing ? {
+                    load_time: performance.timing.loadEventEnd - performance.timing.navigationStart,
+                    dom_ready: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart
+                } : null
+            };
+        }
+    </script>
+</body>
+</html>
