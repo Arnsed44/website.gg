@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics Dashboard</title>
+    <title>Privacy Security Dashboard - Analysis Reports</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -156,8 +156,8 @@
 </head>
 <body>
     <div class="header">
-        <h1>Analytics Dashboard</h1>
-        <p>Real-time visitor data and analytics</p>
+        <h1>🔒 Privacy Security Dashboard</h1>
+        <p>Real-time privacy vulnerability assessments and security analysis</p>
     </div>
     
     <div class="container">
@@ -165,19 +165,19 @@
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
                 <div class="stat-number" id="totalVisitors">-</div>
-                <div class="stat-label">Total Visitors</div>
+                <div class="stat-label">🔍 Security Scans</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="uniqueIPs">-</div>
-                <div class="stat-label">Unique IP Addresses</div>
+                <div class="stat-label">🌐 Unique Endpoints</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="todayVisits">-</div>
-                <div class="stat-label">Today's Visits</div>
+                <div class="stat-label">📅 Today's Assessments</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="avgDaily">-</div>
-                <div class="stat-label">Avg Daily Visits</div>
+                <div class="stat-label">📊 Daily Average</div>
             </div>
         </div>
         
@@ -201,22 +201,22 @@
         <!-- Data Table -->
         <div class="data-table">
             <div class="section-title">
-                Recent Visitor Logs
+                🔒 Recent Security Assessments
                 <button class="btn refresh-btn" onclick="refreshData()">Refresh</button>
-                <a href="/export" class="btn">Export Data</a>
-                <a href="/" class="btn">Back to Home</a>
+                <a href="/export" class="btn">📄 Export Reports</a>
+                <a href="/" class="btn">🏠 Back to Scanner</a>
             </div>
             
             <table>
                 <thead>
                     <tr>
-                        <th>Timestamp</th>
-                        <th>IP Address</th>
-                        <th>Browser</th>
-                        <th>OS</th>
-                        <th>Resolution</th>
-                        <th>Location</th>
-                        <th>Session ID</th>
+                        <th>⏰ Scan Time</th>
+                        <th>🌐 Endpoint</th>
+                        <th>🖥️ Browser</th>
+                        <th>💻 OS</th>
+                        <th>📏 Resolution</th>
+                        <th>🌍 Location</th>
+                        <th>🔐 Analysis ID</th>
                     </tr>
                 </thead>
                 <tbody id="logsTable">
